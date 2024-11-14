@@ -49,6 +49,11 @@ export type Transform<T> = {
   aggregate?: Aggregate | Array<Aggregate>;
   filter?: Filter<T>;
   groupBy?: GroupBy<T>;
+  compute?: Compute<T>;
+}
+export type Compute<T> = {
+  expression: Array<keyof T>;
+  transform?: Transform<T>;
 }
 export type GroupBy<T> = {
   properties: Array<keyof T>;
@@ -479,7 +484,8 @@ function buildTransforms<T>(transforms: Transform<T> | Transform<T>[]) {
   const transformsArray = Array.isArray(transforms) ? transforms : [transforms];
 
   const transformsResult = transformsArray.reduce((result: string[], transform) => {
-    const { aggregate, filter, groupBy, ...rest } = transform;
+    const { aggregate, filter, groupBy, compute, ...rest } = transform;
+    
 
     // TODO: support as many of the following:
     //   topcount, topsum, toppercent,
@@ -530,6 +536,28 @@ function buildAggregate(aggregate: Aggregate | Aggregate[]) {
         });
     })
     .join(',');
+}
+
+function buildCompute<T>(compute: Compute<T>) {
+  if (!compute) {
+      return '';
+  }
+
+  // Wrap single object in an array for simplified processing
+  var computeArray = Array.isArray(compute) ? compute : [compute];
+  return computeArray
+      .map(function (computeItem) {
+          return Object.keys(computeItem)
+              .map(function (computeKey) {
+                  var computeValue = computeItem[computeKey];
+                  if (computeValue && computeValue.as) {
+                      return `${computeKey}(${computeValue.expression}) as ${computeValue.as}`;
+                  }
+                  throw new Error(`Invalid compute structure for key: ${computeKey}`);
+              })
+              .join(',');
+      })
+      .join(',');
 }
 
 function buildGroupBy<T>(groupBy: GroupBy<T>) {
