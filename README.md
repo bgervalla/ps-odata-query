@@ -1,15 +1,15 @@
-# odata-query
+# ps-odata-query
 
 OData v4 query builder that uses a simple object-based syntax similar to [MongoDB](https://docs.mongodb.com/manual/reference/operator/query/) and [js-data](http://www.js-data.io/v3.0/docs/query-syntax)
 
 ## Install
 ```
-npm install odata-query
+npm install ps-odata-query
 ```
 
 and then use the library
 ```js
-import buildQuery from 'odata-query'
+import buildQuery from 'ps-odata-query'
 
 const query = buildQuery({...})
 fetch(`http://localhost${query}`)

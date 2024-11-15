@@ -22,7 +22,7 @@ export type NestedOrderBy<T> = { [P in keyof T]?: T[P] extends Array<infer E> ? 
 export type OrderBy<T> = string | OrderByOptions<T> | Array<OrderByOptions<T>> | NestedOrderBy<T>;
 export type TypedFilter<T> = { [P in keyof T]?: any };
 export type Filter<T> = string | PlainObject | TypedFilter<T> | Array<string | PlainObject | TypedFilter<T>>;
-export type NestedExpandOptions<T> = {[P in keyof T]?: (T[P] extends Array<infer E> ? Partial<ExpandOptions<E>> : Partial<ExpandOptions<T[P]>>) };
+export type NestedExpandOptions<T> = { [P in keyof T]?: (T[P] extends Array<infer E> ? Partial<ExpandOptions<E>> : Partial<ExpandOptions<T[P]>>) };
 export type Expand<T> = string | keyof T | NestedExpandOptions<T> | Array<keyof T | NestedExpandOptions<T>> | Array<string | NestedExpandOptions<T>>;
 export enum StandardAggregateMethods {
   sum = "sum",
@@ -33,7 +33,7 @@ export enum StandardAggregateMethods {
 }
 export type Aggregate = string | { [propertyName: string]: { with: StandardAggregateMethods, as: string } };
 
-export type OrderByOptions<T> = keyof T | [ keyof T, 'asc' | 'desc' ];
+export type OrderByOptions<T> = keyof T | [keyof T, 'asc' | 'desc'];
 export type ExpandOptions<T> = {
   select: Select<T>;
   filter: Filter<T>;
@@ -116,7 +116,7 @@ export default function <T>({
   // key is not (null, undefined)
   if (key != undefined) {
     path += `(${handleValue(key as Value, aliases)})`;
-    }
+  }
 
   if (filter || typeof count === 'object')
     params.$filter = buildFilter(typeof count === 'object' ? count : filter, aliases);
@@ -200,16 +200,16 @@ function buildFilter<T>(filters: Filter<T> = {}, aliases: Alias[] = [], propPref
           const value = (filter as any)[filterKey];
           if (value === undefined) {
             return result;
-	  }
+          }
 
           let propName = '';
           if (propPrefix) {
             if (filterKey === ITEM_ROOT) {
               propName = propPrefix;
             } else if (INDEXOF_REGEX.test(filterKey)) {
-              propName = filterKey.replace(INDEXOF_REGEX, (_,$1)=>$1.trim() === ITEM_ROOT ? `(${propPrefix})` : `(${propPrefix}/${$1.trim()})`);
+              propName = filterKey.replace(INDEXOF_REGEX, (_, $1) => $1.trim() === ITEM_ROOT ? `(${propPrefix})` : `(${propPrefix}/${$1.trim()})`);
             } else if (FUNCTION_REGEX.test(filterKey)) {
-              propName = filterKey.replace(FUNCTION_REGEX, (_,$1)=>$1.trim() === ITEM_ROOT ? `(${propPrefix})` : `(${propPrefix}/${$1.trim()})`);
+              propName = filterKey.replace(FUNCTION_REGEX, (_, $1) => $1.trim() === ITEM_ROOT ? `(${propPrefix})` : `(${propPrefix}/${$1.trim()})`);
             } else {
               propName = `${propPrefix}/${filterKey}`;
             }
@@ -219,7 +219,7 @@ function buildFilter<T>(filters: Filter<T> = {}, aliases: Alias[] = [], propPref
 
           if (filterKey === ITEM_ROOT && Array.isArray(value)) {
             return result.concat(
-                value.map((arrayValue: any) => renderPrimitiveValue(propName, arrayValue))
+              value.map((arrayValue: any) => renderPrimitiveValue(propName, arrayValue))
             )
           }
 
@@ -336,16 +336,16 @@ function buildFilter<T>(filters: Filter<T> = {}, aliases: Alias[] = [], propPref
       // normalize {any:[{prop1: 1}, {prop2: 1}]} --> {any:{prop1: 1, prop2: 1}}; same for 'all',
       // simple values collection: {any:[{'': 'simpleVal1'}, {'': 'simpleVal2'}]} --> {any:{'': ['simpleVal1', 'simpleVal2']}}; same for 'all',
       const filterValue = Array.isArray(value) ?
-          value.reduce((acc, item) => {
-            if (item.hasOwnProperty(ITEM_ROOT)) {
-              if (!acc.hasOwnProperty(ITEM_ROOT)) {
-                acc[ITEM_ROOT] = [];
-              }
-              acc[ITEM_ROOT].push(item[ITEM_ROOT])
-              return acc;
+        value.reduce((acc, item) => {
+          if (item.hasOwnProperty(ITEM_ROOT)) {
+            if (!acc.hasOwnProperty(ITEM_ROOT)) {
+              acc[ITEM_ROOT] = [];
             }
-            return {...acc, ...item}
-          }, {}) : value;
+            acc[ITEM_ROOT].push(item[ITEM_ROOT])
+            return acc;
+          }
+          return { ...acc, ...item }
+        }, {}) : value;
 
       const filter = buildFilterCore(filterValue, aliases, lambdaParameter);
       clause = `${propName}/${op}(${filter ? `${lambdaParameter}:${filter}` : ''})`;
@@ -355,11 +355,11 @@ function buildFilter<T>(filters: Filter<T> = {}, aliases: Alias[] = [], propPref
 }
 
 function getStringCollectionClause(lambdaParameter: string, value: any, collectionOperator: string, propName: string) {
-	let clause = '';
-	const conditionOperator = collectionOperator == 'all' ? 'ne' : 'eq';
-	clause = `${propName}/${collectionOperator}(${lambdaParameter}: ${lambdaParameter} ${conditionOperator} '${value}')`
+  let clause = '';
+  const conditionOperator = collectionOperator == 'all' ? 'ne' : 'eq';
+  clause = `${propName}/${collectionOperator}(${lambdaParameter}: ${lambdaParameter} ${conditionOperator} '${value}')`
 
-	return clause;
+  return clause;
 }
 
 function escapeIllegalChars(string: string) {
@@ -404,8 +404,8 @@ function handleValue(value: Value, aliases?: Alias[]): any {
         return `${value.value}M`;
       default:
         return Object.entries(value)
-            .filter(([, v]) => v !== undefined)
-            .map(([k, v]) => `${k}=${handleValue(v as Value, aliases)}`).join(',');
+          .filter(([, v]) => v !== undefined)
+          .map(([k, v]) => `${k}=${handleValue(v as Value, aliases)}`).join(',');
     }
   }
   return value;
@@ -485,7 +485,7 @@ function buildTransforms<T>(transforms: Transform<T> | Transform<T>[]) {
 
   const transformsResult = transformsArray.reduce((result: string[], transform) => {
     const { aggregate, filter, groupBy, compute, ...rest } = transform;
-    
+
 
     // TODO: support as many of the following:
     //   topcount, topsum, toppercent,
@@ -501,6 +501,10 @@ function buildTransforms<T>(transforms: Transform<T> | Transform<T>[]) {
         result.push(`filter(${buildFilter(builtFilter)})`);
       }
     }
+    if (compute) {
+      result.push(`compute(${buildCompute(compute)})`);
+    }
+
     if (groupBy) { result.push(`groupby(${buildGroupBy(groupBy)})`); }
 
     return result;
@@ -540,24 +544,24 @@ function buildAggregate(aggregate: Aggregate | Aggregate[]) {
 
 function buildCompute<T>(compute: Compute<T>) {
   if (!compute) {
-      return '';
+    return '';
   }
 
   // Wrap single object in an array for simplified processing
   var computeArray = Array.isArray(compute) ? compute : [compute];
   return computeArray
-      .map(function (computeItem) {
-          return Object.keys(computeItem)
-              .map(function (computeKey) {
-                  var computeValue = computeItem[computeKey];
-                  if (computeValue && computeValue.as) {
-                      return `${computeKey}(${computeValue.expression}) as ${computeValue.as}`;
-                  }
-                  throw new Error(`Invalid compute structure for key: ${computeKey}`);
-              })
-              .join(',');
-      })
-      .join(',');
+    .map(function (computeItem) {
+      return Object.keys(computeItem)
+        .map(function (computeKey) {
+          var computeValue = computeItem[computeKey];
+          if (computeValue && computeValue.as) {
+            return `${computeKey}(${computeValue.expression}) as ${computeValue.as}`;
+          }
+          throw new Error(`Invalid compute structure for key: ${computeKey}`);
+        })
+        .join(',');
+    })
+    .join(',');
 }
 
 function buildGroupBy<T>(groupBy: GroupBy<T>) {
@@ -578,7 +582,7 @@ function buildOrderBy<T>(orderBy: OrderBy<T>, prefix: string = ''): string {
   if (Array.isArray(orderBy)) {
     return (orderBy as OrderByOptions<T>[])
       .map(value =>
-        (Array.isArray(value) && value.length === 2 && ['asc', 'desc'].indexOf(value[1]) !== -1)? value.join(' ') : value
+        (Array.isArray(value) && value.length === 2 && ['asc', 'desc'].indexOf(value[1]) !== -1) ? value.join(' ') : value
       )
       .map(v => `${prefix}${String(v)}`).join(',');
   } else if (typeof orderBy === 'object') {
